@@ -16,10 +16,13 @@ debug_info(erlang_v1, _Module, {elixir_v1, Map, Specs}, _Opts) ->
 debug_info(core_v1, _Module, {elixir_v1, Map, Specs}, Opts) ->
   {Prefix, Forms, _, _, _, _} = dynamic_form(Map),
   #{compile_opts := CompileOpts} = Map,
+  AllOpts = CompileOpts ++ Opts,
 
   %% Do not rely on elixir_erl_compiler because we don't
   %% warnings nor the other functionality provided there.
-  try compile:noenv_forms(Prefix ++ Specs ++ Forms, [core, return | CompileOpts] ++ Opts) of
+  {ok, CoreForms, _} = elixir_erl_compiler:erl_to_core(Prefix ++ Specs ++ Forms, AllOpts),
+
+  try compile:noenv_forms(CoreForms, [from_core, core, return | AllOpts]) of
     {ok, _, Core, _} -> {ok, Core};
     _What -> {error, failed_conversion}
   catch

@@ -1,5 +1,5 @@
 -module(elixir_erl_compiler).
--export([forms/3, noenv_forms/3]).
+-export([forms/3, noenv_forms/3, erl_to_core/2]).
 
 forms(Forms, File, Opts) ->
   compile(fun compile:forms/2, Forms, File, Opts).
@@ -7,13 +7,20 @@ forms(Forms, File, Opts) ->
 noenv_forms(Forms, File, Opts) ->
   compile(fun compile:noenv_forms/2, Forms, File, Opts).
 
+erl_to_core(Forms, Opts) ->
+  v3_core:module(Forms, Opts).
+
 compile(Fun, Forms, File, Opts) when is_list(Forms), is_list(Opts), is_binary(File) ->
+  {ok, CoreForms, CoreWarnings} = erl_to_core(Forms, Opts),
   Source = elixir_utils:characters_to_list(File),
-  case Fun(Forms, [return, {source, Source} | Opts]) of
+
+  case Fun(CoreForms, [from_core, return, {source, Source} | Opts]) of
     {ok, Module, Binary, Warnings} ->
+      format_warnings(Opts, CoreWarnings),
       format_warnings(Opts, Warnings),
       {Module, Binary};
     {error, Errors, Warnings} ->
+      format_warnings(Opts, CoreWarnings),
       format_warnings(Opts, Warnings),
       format_errors(Errors)
   end.

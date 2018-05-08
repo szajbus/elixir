@@ -211,13 +211,8 @@ defmodule Regex do
   """
   @since "1.4.0"
   @spec version :: term()
-  # TODO: No longer check for function_exported? on OTP 20+.
   def version do
-    if function_exported?(:re, :version, 0) do
-      {:re.version(), :erlang.system_info(:endian)}
-    else
-      {"8.33 2013-05-29", :erlang.system_info(:endian)}
-    end
+    {:re.version(), :erlang.system_info(:endian)}
   end
 
   @doc """

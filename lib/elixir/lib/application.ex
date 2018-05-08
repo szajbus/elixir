@@ -38,9 +38,9 @@ defmodule Application do
   Each application will then shutdown its top-level supervisor, if one is
   available, [which then shuts down its children](Supervisor.html#module-start-and-shutdown).
 
-  From Erlang/OTP 19.1, a SIGTERM from the operating system will automatically
-  translate to `System.stop/0`. Erlang/OTP 20 gives user more explicit control
-  over OS signals via the `:os.set_signal/2` function.
+  A SIGTERM from the operating system will automatically translate to `System.stop/0`.
+  A more explicit control over OS signals can be achieved via the `:os.set_signal/2`
+  function.
 
   ### Application module callback
 

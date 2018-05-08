@@ -383,10 +383,6 @@ defmodule IEx.Pry do
           {:ok, {_, [debug_info: {:debug_info_v1, _, _}]}} ->
             {:error, :non_elixir_module}
 
-          {:error, :beam_lib, {:unknown_chunk, _, _}} ->
-            # TODO: Remove this when we require OTP 20+
-            {:error, :otp_20_is_required}
-
           {:error, :beam_lib, {:missing_chunk, _, _}} ->
             {:error, :missing_debug_info}
 

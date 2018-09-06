@@ -206,6 +206,7 @@ defmodule Mix.Compilers.Elixir do
   end
 
   defp each_cycle() do
+    Mix.shell().info("Cycle...")
     {modules, _structs, sources, pending_modules, pending_structs} = get_compiler_info()
 
     {pending_modules, structs, changed} =
@@ -255,6 +256,8 @@ defmodule Mix.Compilers.Elixir do
     kind = detect_kind(module)
     source = Path.relative_to(source, cwd)
     external = get_external_resources(module, cwd)
+
+    Mix.shell().info("Module #{source}")
 
     {modules, structs, sources, pending_modules, pending_structs} = get_compiler_info()
 

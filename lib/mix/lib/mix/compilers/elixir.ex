@@ -177,6 +177,8 @@ defmodule Mix.Compilers.Elixir do
       dest: dest
     ]
 
+    Mix.shell().info(stale)
+
     try do
       Kernel.ParallelCompiler.compile(stale, compile_opts ++ extra)
     else
@@ -579,7 +581,12 @@ defmodule Mix.Compilers.Elixir do
       [@manifest_vsn | modules ++ sources]
       |> :erlang.term_to_binary([:compressed])
 
+    raw_manifest_data =
+      [@manifest_vsn | modules ++ sources]
+      |> inspect
+
     File.write!(manifest, manifest_data)
+    File.write!("#{manifest}.dump", raw_manifest_data)
     File.touch!(manifest, timestamp)
 
     # Since Elixir is a dependency itself, we need to touch the lock

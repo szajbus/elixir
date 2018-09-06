@@ -173,6 +173,7 @@ defmodule Mix.Compilers.Elixir do
       each_module: &each_module(cwd, &1, &2, &3),
       each_long_compilation: &each_long_compilation(&1, long_compilation_threshold),
       long_compilation_threshold: long_compilation_threshold,
+      info: fn m -> Mix.shell().info(m) end,
       dest: dest
     ]
 

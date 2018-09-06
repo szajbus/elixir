@@ -73,6 +73,7 @@ compile(Line, Module, Block, Vars, E) ->
   {Data, Defs, Ref} = build(Line, File, Module, ?key(E, lexical_tracker)),
 
   try
+    announce_module_compilation(Module, Line),
     put_compiler_modules([Module | CompilerModules]),
     {Result, NE, OverridablePairs} = eval_form(Line, Module, Data, Block, Vars, E),
 
@@ -309,6 +310,16 @@ warn_unused_attributes(File, Data, PersistedAttrs) ->
   Keys = ets:select(Data, [{{'$1', '_', '_', '$2'}, [{is_atom, '$1'}, {is_integer, '$2'}], [['$1', '$2']]}]),
   [elixir_errors:form_warn([{line, Line}], File, ?MODULE, {unused_attribute, Key}) ||
    [Key, Line] <- Keys, not lists:member(Key, ReservedAttrs)].
+
+announce_module_compilation(Module, Line) ->
+ case get(elixir_compiler_pid) of
+   undefined ->
+     ok;
+   PID ->
+     Ref = make_ref(),
+     PID ! {module_compiling, self(), Ref, get(elixir_compiler_file), Module, Line},
+     receive {Ref, ack} -> ok end
+ end.
 
 %% Integration with elixir_compiler that makes the module available
 

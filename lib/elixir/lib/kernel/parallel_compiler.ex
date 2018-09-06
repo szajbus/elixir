@@ -66,7 +66,7 @@ defmodule Kernel.ParallelCompiler do
     * `:dest` - the destination directory for the BEAM files. When using `files/2`,
       this information is only used to properly annotate the BEAM files before
       they are loaded into memory. If you want a file to actually be written to
-      `dest`, use `compile_to_path/3` instead.
+      `dest`, use `©_path/3` instead.
 
   """
   def compile(files, options \\ []) when is_list(options) do
@@ -134,6 +134,7 @@ defmodule Kernel.ParallelCompiler do
         each_module: Keyword.get(options, :each_module, fn _file, _module, _binary -> :ok end),
         output: output,
         long_compilation_threshold: Keyword.get(options, :long_compilation_threshold, 15),
+        info: Keyword.get(options, :info, fn _msg -> :ok end),
         schedulers: schedulers
       })
 
@@ -289,7 +290,13 @@ defmodule Kernel.ParallelCompiler do
         result = [{:struct, module} | result]
         spawn_workers(available ++ files, waiting, queued, result, warnings, state)
 
+      {:module_compiling, child, ref, _file, module, line} ->
+        state.info.("[Worker #{Kernel.inspect(child)}] Start compiling #{module} #{line}")
+        send(child, {ref, :ack})
+        spawn_workers(files, waiting, queued, result, warnings, state)
+
       {:module_available, child, ref, file, module, binary} ->
+        state.info.("[Worker #{Kernel.inspect(child)}] Done compiling #{module}")
         state.each_module.(file, module, binary)
 
         # Release the module loader which is waiting for an ack

@@ -34,16 +34,38 @@ defmodule Mix.Compilers.Elixir do
     # change to files are still picked up by the compiler. This
     # timestamp is used when writing BEAM files and the manifest.
     timestamp = :calendar.universal_time()
+
+    Mix.shell().info("--> timestamp")
+    Mix.shell().info(inspect(timestamp))
+
     all_paths = MapSet.new(Mix.Utils.extract_files(srcs, exts))
+
+    Mix.shell().info("--> all_paths")
+    Mix.shell().info(inspect(all_paths))
 
     {all_modules, all_sources} = parse_manifest(manifest, dest)
     modified = Mix.Utils.last_modified(manifest)
     prev_paths = for source(source: source) <- all_sources, into: MapSet.new(), do: source
 
+    Mix.shell().info("--> all_modules")
+    Mix.shell().info(inspect(all_modules))
+
+    Mix.shell().info("--> all_sources")
+    Mix.shell().info(inspect(all_sources))
+
+    Mix.shell().info("--> modified")
+    Mix.shell().info(inspect(modified))
+
+    Mix.shell().info("--> prev_paths")
+    Mix.shell().info(inspect(prev_paths))
+
     removed =
       prev_paths
       |> MapSet.difference(all_paths)
       |> MapSet.to_list()
+
+    Mix.shell().info("--> removed")
+    Mix.shell().info(inspect(removed))
 
     {changed, sources_stats} =
       if force do
@@ -64,10 +86,16 @@ defmodule Mix.Compilers.Elixir do
           |> MapSet.difference(prev_paths)
           |> MapSet.to_list()
 
+        Mix.shell().info("--> new_paths")
+        Mix.shell().info(inspect(new_paths))
+
         sources_stats =
           for path <- new_paths,
               into: mtimes_and_sizes(all_sources),
               do: {path, Mix.Utils.last_modified_and_size(path)}
+
+        Mix.shell().info("--> sources_stats")
+        Mix.shell().info(inspect(sources_stats))
 
         # Plus the sources that have changed in disk
         changed_paths =
@@ -78,13 +106,28 @@ defmodule Mix.Compilers.Elixir do
               into: new_paths,
               do: source
 
+        Mix.shell().info("--> changed_paths")
+        Mix.shell().info(inspect(changed_paths))
+
         {changed_paths, sources_stats}
       end
 
     stale_local_deps = stale_local_deps(manifest, modified)
 
+    Mix.shell().info("--> stale_local_deps")
+    Mix.shell().info(inspect(stale_local_deps))
+
     {modules, structs, changed} =
       update_stale_entries(all_modules, all_sources, removed ++ changed, stale_local_deps, %{})
+
+    Mix.shell().info("--> modules")
+    Mix.shell().info(inspect(modules))
+
+    Mix.shell().info("--> structs")
+    Mix.shell().info(inspect(structs))
+
+    Mix.shell().info("--> changed")
+    Mix.shell().info(inspect(changed))
 
     stale = changed -- removed
 
@@ -92,6 +135,9 @@ defmodule Mix.Compilers.Elixir do
       removed
       |> Enum.reduce(all_sources, &List.keydelete(&2, &1, source(:source)))
       |> update_stale_sources(stale, sources_stats)
+
+    Mix.shell().info("--> sources")
+    Mix.shell().info(inspect(sources))
 
     if opts[:all_warnings], do: show_warnings(sources)
 
@@ -176,8 +222,6 @@ defmodule Mix.Compilers.Elixir do
       info: fn m -> Mix.shell().info(m) end,
       dest: dest
     ]
-
-    Mix.shell().info(stale)
 
     try do
       Kernel.ParallelCompiler.compile(stale, compile_opts ++ extra)

@@ -706,7 +706,7 @@ defmodule Mix.Tasks.Xref do
       references
       |> Enum.map(fn {file, deps} -> {length(deps), file} end)
       |> Enum.sort()
-      |> Enum.take(-10)
+      |> Enum.take(-100)
       |> Enum.reverse()
 
     shell.info("\nTop #{length(outgoing)} files with most outgoing dependencies:")
@@ -721,7 +721,7 @@ defmodule Mix.Tasks.Xref do
       end)
       |> Enum.map(fn {file, count} -> {count, file} end)
       |> Enum.sort()
-      |> Enum.take(-10)
+      |> Enum.take(-100)
       |> Enum.reverse()
 
     shell.info("\nTop #{length(incoming)} files with most incoming dependencies:")

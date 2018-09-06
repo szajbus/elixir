@@ -213,6 +213,7 @@ defmodule Kernel.ParallelCompiler do
       end)
 
     timer_ref = Process.send_after(self(), {:timed_out, pid}, threshold * 1000)
+    state.info.("[Worker #{Kernel.inspect(pid)}] enqueuing #{Kernel.inspect(file)}")
     queued = [{pid, ref, file, timer_ref} | queued]
     spawn_workers(files, waiting, queued, result, warnings, state)
   end
@@ -326,6 +327,7 @@ defmodule Kernel.ParallelCompiler do
             send(child, {ref, :found})
             waiting
           else
+            state.info.("[Worker #{Kernel.inspect(child)}] #{inspect(defining)} waiting on #{on} (#{kind})")
             [{kind, child, ref, on, defining} | waiting]
           end
 

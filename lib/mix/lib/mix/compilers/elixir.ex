@@ -378,12 +378,15 @@ defmodule Mix.Compilers.Elixir do
     remove_stale_entries(modules, %{}, changed, stale_files, reducer)
   end
 
-  defp remove_stale_entries(modules, structs, old_changed, old_stale, reducer) do
+  defp remove_stale_entries(modules, structs, old_changed, old_stale, reducer, round \\ 1) do
+    Mix.shell().info("")
+    Mix.shell().info("--> Round #{round}")
+
     {pending_modules, structs, new_changed, new_stale} =
       Enum.reduce(modules, {[], structs, old_changed, old_stale}, reducer)
 
     if map_size(new_stale) > map_size(old_stale) or map_size(new_changed) > map_size(old_changed) do
-      remove_stale_entries(pending_modules, structs, new_changed, new_stale, reducer)
+      remove_stale_entries(pending_modules, structs, new_changed, new_stale, reducer, round + 1)
     else
       {pending_modules, structs, Map.keys(new_changed)}
     end
@@ -404,6 +407,31 @@ defmodule Mix.Compilers.Elixir do
       end)
 
     cond do
+      trigger = find_key(changed, source_files) ->
+        Mix.shell().info("----> Module: #{module}")
+        Mix.shell().info("      Sources: #{inspect(source_files)}")
+        Mix.shell().info("      Changed: #{trigger}")
+
+      trigger = find_key(stale, compile_references) ->
+        Mix.shell().info("----> Module: #{module}")
+        Mix.shell().info("      Sources: #{inspect(source_files)}")
+        Mix.shell().info("      Compile ref: #{trigger}")
+
+      trigger = find_key(stale_structs, struct_references) ->
+        Mix.shell().info("----> Module: #{module}")
+        Mix.shell().info("      Sources: #{inspect(source_files)}")
+        Mix.shell().info("      Struct ref: #{trigger}")
+
+      trigger = find_key(stale, runtime_references) ->
+        Mix.shell().info("----> Module: #{module}")
+        Mix.shell().info("      Sources: #{inspect(source_files)}")
+        Mix.shell().info("      Runtime ref: #{trigger}")
+
+      true ->
+        nil
+    end
+
+    cond do
       # If I changed in disk or have a compile time reference to
       # something stale or have a reference to an old struct,
       # I need to be recompiled.
@@ -422,6 +450,10 @@ defmodule Mix.Compilers.Elixir do
       true ->
         {[entry | rest], structs, changed, stale}
     end
+  end
+
+  defp find_key(map, enumerable) do
+    Enum.find(enumerable, &Map.has_key?(map, &1))
   end
 
   defp has_any_key?(map, enumerable) do
